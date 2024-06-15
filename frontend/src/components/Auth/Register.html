@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="../../css/output.css">
+    <style>
+        .video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-900 flex items-center justify-center min-h-screen relative overflow-hidden">
+    <!-- Background Video -->
+    <video autoplay muted loop class="video-background">
+        <source src="../../../public/assets/videos/Untitled design.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div
+        class="mt-4 relative z-10 max-w-lg mx-auto bg-gray-900 shadow-lg sm:rounded-lg p-6 sm:p-12 opacity-80 flex flex-col justify-center items-center">
+        <div class="flex flex-col items-center">
+            <form name="registerForm" id="registerForm" method="post" enctype="multipart/form-data">
+                <h1 class="text-2xl xl:text-3xl font-extrabold text-center mb-2 text-white">
+                    Sign Up
+                </h1>
+                <div class="w-full flex-1">
+                    <div class="mx-auto max-w-xs">
+                        <input name="name" id="name"
+                            class="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
+                            type="text" placeholder="Name" required />
+                        <input name="email" id="email"
+                            class="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
+                            type="email" placeholder="Email" required />
+                        <input name="password" id="password"
+                            class="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
+                            type="password" placeholder="Password" required />
+                        <input name="confirmPassword" id="confirmPassword"
+                            class="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
+                            type="password" placeholder="Confirm Password" required />
+                        <button type="submit" onclick="handleSubmit(event)"
+                            class="mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none">
+                            <svg class="w-6 h-6 -ml-2" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                <circle cx="8.5" cy="7" r="4" />
+                                <path d="M20 8v6M23 11h-6" />
+                            </svg>
+                            <span class="ml-3">
+                                Sign Up
+                            </span>
+                        </button>
+                        <p class="mt-6 text-xs text-gray-600 text-center">
+                            Already Have Account? Please
+                            <a href="./Login.html" class="border-b border-gray-500 border-dotted text-white">
+                                Sign In
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script type="text/javascript">
+
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(String(email).toLowerCase());
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const form = event.target.form; // Get the form reference
+            submitUserData(form);
+        }
+
+        async function submitUserData(form) {
+
+            let name = form.name.value;
+            let email = form.email.value;
+            let password = form.password.value;
+            let confirmPassword = form.confirmPassword.value;
+
+            // Validation checks
+            if (!name) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Name is required.",
+                });
+                return;
+            }
+
+            if (!email) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Email is required.",
+                });
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Please enter a valid email address.",
+                });
+                return;
+            }
+
+            if (!password) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Password is required.",
+                });
+                return;
+            }
+
+            if (!confirmPassword) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Confirm Password is required.",
+                });
+                return;
+            }
+
+            if (password.length < 6) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Password must be at least 6 characters long.",
+                });
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Password and confirm password do not match.",
+                });
+                return;
+            }
+
+            const formData = {
+                name,
+                email,
+                password
+            };
+
+            console.log("FormData in frontend:", formData);
+
+            try {
+                console.log("hit api register");
+                const response = await axios.post("http://localhost:4000/api/auth/register", formData);
+
+                if (response.data.status === 200) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Success",
+                        text: response.data.message,
+                    }).then(() => {
+                        window.location.href = "./Login.html";
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: response.data.message,
+                    });
+                }
+
+            } catch (error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: error.response ? error.response.data.message : "Your Request has not been submitted. Try Again later!",
+                });
+            }
+        }
+    </script>
+
+</body>
+
+</html>

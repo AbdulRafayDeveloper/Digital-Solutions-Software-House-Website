@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="../../../css/output.css">
+    <script src="../components/AdminComponents.js"></script>
+</head>
+
+<body class="bg-gray-100">
+    <div class="flex flex-col md:flex-row h-screen">
+        <!-- Sidebar -->
+        <admin-sidebar></admin-sidebar>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-6 overflow-auto">
+            <!-- Header -->
+            <admin-header></admin-header>
+
+            <h2 class="text-2xl font-bold mt-8 mb-4">Users Request List</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full bg-white rounded-lg shadow-lg">
+                    <thead class="bg-gray-300">
+                        <tr>
+                            <th class="p-3 border border-1">Sr#</th>
+                            <th class="p-3 border border-1">Email</th>
+                            <th class="p-3 border border-1">Service</th>
+                            <th class="p-3 border border-1">Subject</th>
+                            <th class="p-3 border border-1">Requirement File</th>
+                            <th class="p-3 border border-1">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userRequestTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Start -->
+    <div id="userInfoModal"
+        class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-3/4 md:w-1/2 lg:w-1/3">
+            <h3 class="text-xl font-bold mb-4">User Information</h3>
+            <table class="w-full">
+                <tbody id="userDetailsBody">
+                    <!-- Content dynamically populated -->
+                </tbody>
+            </table>
+            <button class="mt-4 bg-red-600 text-white p-2 rounded" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+    <!-- Modal End -->
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+
+        window.onload = fetchUserRequests;
+
+        async function fetchUserRequests() {
+            // Check for token in local storage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = "../../Auth/Login.html";
+            }
+
+            try {
+                const response = await axios.get('http://localhost:4000/api/user');
+                const data = response.data.data;
+
+                if (Array.isArray(data)) { // Ensure data is an array
+                    const tbody = document.getElementById("userRequestTableBody");
+                    tbody.innerHTML = ''; // Clear existing content
+
+                    data.forEach((item, index) => {
+                        const row = document.createElement('tr');
+                        row.classList.add('border-b', 'hover:bg-gray-50');
+
+                        const filePath = `../../../../../backend/public/assets/${item.file}`; // Correct path for the file
+                        const PreviewLink = `<a href="${filePath}" target="_blank">Preview File</a>`;
+
+                        row.innerHTML = `
+                            <td class="p-2 border border-1 text-center">${index + 1}</td>
+                            <td class="p-2 border border-1 text-center">${item.email}</td>
+                            <td class="p-2 border border-1 text-center">${item.service}</td>
+                            <td class="p-2 border border-1 text-center">${item.subject}</td>
+                            <td class="p-2 border border-1 text-center"><button class="bg-blue-500 px-2 py-1 text-white rounded-md">${PreviewLink}</button></td>
+                            <td class="p-2 border border-1 text-center">
+                                <i class="fas fa-eye text-green-600 cursor-pointer" onclick='openModal(${JSON.stringify(item)})'></i>
+                                <i class="fas fa-trash text-red-600 cursor-pointer sm:mx-1 md:mx-1 lg:mx-3 xl:mx-4 2xl:mx-4" onclick='deleteRecord(${JSON.stringify(item.id)})'></i>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    console.error('Expected an array but got:', data); // Handle unexpected response type
+                }
+
+            } catch (error) {
+                console.error('Error fetching user requests:', error);
+            }
+        }
+
+        function openModal(userDetails) {
+            const modal = document.getElementById("userInfoModal");
+            modal.classList.remove("hidden");
+
+            const userDetailsBody = document.getElementById("userDetailsBody");
+            userDetailsBody.innerHTML = ''; // Clear existing content
+
+            for (const [key, value] of Object.entries(userDetails)) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td class="p-1 font-bold break-words whitespace-normal">${key}</td>
+            <td class="p-1 break-words whitespace-normal">${value}</td> <!-- Ensure text wrapping -->
+        `;
+                userDetailsBody.appendChild(row);
+            }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("userInfoModal");
+            modal.classList.add("hidden"); // Hide the modal
+        }
+
+        function deleteRecord(id) {
+            Swal.fire({
+                title: 'Are you sure you want to delete this record?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: '<i class="fa fa-trash"></i> Delete',
+                cancelButtonText: '<i class="fa fa-times"></i> Cancel',
+                buttonsStyling: false,
+                customClass: {
+                    confirmButton: 'bg-red-600 mx-2 p-1 text-white rounded-sm',
+                    cancelButton: 'bg-blue-600 mx-2 p-1 text-white border border-2 border-black rounded-sm'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await axios.delete(`http://localhost:4000/api/user/${id}`).then((res) => {
+                        window.location = './UsersRequestList.html';
+                    }).catch((err) => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to Delete Product. Please try again.'
+                        });
+                    })
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>

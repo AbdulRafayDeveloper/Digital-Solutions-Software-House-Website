@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="../../../css/output.css">
+    <script src="../components/AdminComponents.js"></script>
+</head>
+
+<body class="bg-gray-100">
+    <div class="flex flex-col md:flex-row h-screen">
+        <!-- Sidebar -->
+        <admin-sidebar></admin-sidebar>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-6 overflow-auto">
+            <!-- Header -->
+            <admin-header></admin-header>
+
+            <h2 class="text-2xl font-bold mt-8 mb-4">User Accounts List</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full bg-white rounded-lg shadow-lg">
+                    <thead class="bg-gray-300">
+                        <tr>
+                            <th class="p-3 border border-1" style="width: 15%;">Sr#</th>
+                            <th class="p-3 border border-1" style="width: 35;">Name</th>
+                            <th class="p-3 border border-1" style="width: 35%;">Email</th>
+                            <th class="p-3 border border-1" style="width: 15%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accountsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+
+        window.onload = fetchServicesRequests;
+
+        async function fetchServicesRequests() {
+            // Check for token in local storage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = "../../Auth/Login.html";
+            }
+            
+            try {
+                const response = await axios.get('http://localhost:4000/api/accounts');
+                const data = response.data.data;
+
+                if (Array.isArray(data)) { // Ensure data is an array
+                    const tbody = document.getElementById("accountsTableBody");
+                    tbody.innerHTML = ''; // Clear existing content
+
+                    data.forEach((item, index) => {
+                        const row = document.createElement('tr');
+                        row.classList.add('border-b', 'hover:bg-gray-50');
+
+                        row.innerHTML = `
+                            <td class="p-2 border border-1 text-center">${index + 1}</td>
+                            <td class="p-2 border border-1 text-center">${item.name}</td>
+                            <td class="p-2 border border-1 text-center">${item.email}</td>
+                            <td class="p-2 border border-1 text-center">
+                                <i class="fas fa-trash text-red-600 cursor-pointer sm:mx-1 md:mx-1 lg:mx-3 xl:mx-4 2xl:mx-4" onclick='deleteRecord(${JSON.stringify(item.id)})'></i>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    console.error('Expected an array but got:', data); // Handle unexpected response type
+                }
+
+            } catch (error) {
+                console.error('Error fetching user requests:', error);
+            }
+        }
+
+        function deleteRecord(id) {
+            Swal.fire({
+                title: 'Are you sure you want to delete this record?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: '<i class="fa fa-trash"></i> Delete',
+                cancelButtonText: '<i class="fa fa-times"></i> Cancel',
+                buttonsStyling: false,
+                customClass: {
+                    confirmButton: 'bg-red-600 mx-2 p-1 text-white rounded-sm',
+                    cancelButton: 'bg-blue-600 mx-2 p-1 text-white border border-2 border-black rounded-sm'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await axios.delete(`http://localhost:4000/api/accounts/${id}`).then((res) => {
+                        window.location = './UserAccountsList.html';
+                    }).catch((err) => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to Delete. Please try again.'
+                        });
+                    })
+                }
+            });
+        }
+
+    </script>
+
+</body>
+
+</html>

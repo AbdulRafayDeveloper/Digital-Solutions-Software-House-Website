@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="../../../css/output.css">
+    <script src="../components/AdminComponents.js"></script>
+</head>
+
+<body class="bg-gray-100">
+    <div class="flex flex-col md:flex-row h-screen">
+        <!-- Sidebar -->
+        <admin-sidebar></admin-sidebar>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-6 overflow-auto justify-center items-center">
+            <!-- Header -->
+            <admin-header></admin-header>
+
+            <h2 class="text-3xl font-bold mt-8 mb-4 text-center">Add New Service</h2>
+
+            <div class="max-w-lg mx-auto">
+                <form name="serviceForm" id="serviceForm" class="bg-white shadow-md rounded px-8 pb-8 mb-4 py-10"
+                    method="post" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+                            Name
+                        </label>
+                        <input type="text"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="name" name="name" placeholder="Enter Service Name">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+                            Description
+                        </label>
+                        <textarea
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="description" name="description" placeholder="Enter Service Description"
+                            rows="4"></textarea>
+
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                            type="submit" onclick="handleSubmit(event)">
+                            Add Service
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+
+        window.onload = checkAuthentification;
+
+        function checkAuthentification() {
+            // Check for token in local storage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = "../../Auth/Login.html";
+            }
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const form = event.target.form; // Get the form reference
+            submitServiceData(form);
+        }
+
+        async function submitServiceData(form) {
+            let name = form.name.value;
+            let description = form.description.value;
+
+            // Validation checks
+            if (!name || !description) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "All fields are required.",
+                });
+                return;
+            }
+
+            if (name.length < 3) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Name must be at least 3 characters long.",
+                });
+                return;
+            }
+
+            if (description.length < 4) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Description must be at least 4 characters long.",
+                });
+                return;
+            }
+
+            const formData = {
+                name,
+                description
+            };
+
+            console.log("FormData in frontend:", formData);
+
+            try {
+                const response = await axios.post("http://localhost:4000/api/services", formData);
+
+                if (response.data.status === 200) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Success",
+                        text: response.data.message,
+                    }).then(() => {
+                        window.location.href = "./ServicesList.html";
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: response.data.message,
+                    });
+                }
+
+            } catch (error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: error.response ? error.response.data.message : "An error occurred",
+                });
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
